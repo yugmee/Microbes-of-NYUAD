@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Microbes of NYUAD – Scavenger Hunt</title>
+  <style>
+    /* ====== BASIC PAGE LAYOUT ====== */
+    body {
+      margin: 0;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #050814;
+      color: #f5f5f5;
+      display: flex;
+      height: 100vh;
+    }
+
+    .map-container {
+      position: relative;
+      flex: 2;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #050814;
+    }
+
+    .map-container img {
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+    }
+
+    /* ====== MAP BUTTONS ====== */
+    .map-pin {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      padding: 6px 10px;
+      border-radius: 999px;
+      border: none;
+      background: rgba(152, 84, 222, 0.95);
+      color: #fff;
+      font-size: 12px;
+      cursor: pointer;
+      backdrop-filter: blur(6px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.35);
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .map-pin:hover {
+      transform: translate(-50%, -50%) scale(1.08);
+      box-shadow: 0 6px 18px rgba(0,0,0,0.5);
+      background: rgba(194, 120, 255, 0.97);
+    }
+
+    /* ====== SIDEBAR ====== */
+    .sidebar {
+      flex: 1;
+      padding: 18px 20px;
+      background: radial-gradient(circle at top, #151a3a, #050814 55%);
+      border-left: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .sidebar h1 {
+      font-size: 22px;
+      margin: 0;
+    }
+
+    .sidebar h2 {
+      font-size: 18px;
+      margin: 4px 0 0;
+    }
+
+    .tagline {
+      font-size: 13px;
+      color: #c3c6ff;
+    }
+
+    .panel {
+      margin-top: 8px;
+      padding: 12px 14px;
+      border-radius: 12px;
+      background: rgba(8, 12, 40, 0.95);
+      border: 1px solid rgba(255,255,255,0.06);
+      font-size: 13px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: #9da3ff;
+    }
+
+    .microbe-name {
+      font-weight: 600;
+    }
+
+    input[type="text"] {
+      width: 100%;
+      padding: 7px 9px;
+      border-radius: 8px;
+      border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(5, 7, 24, 0.9);
+      color: #fff;
+      font-size: 13px;
+      outline: none;
+    }
+
+    input[type="text"]:focus {
+      border-color: #c47dff;
+      box-shadow: 0 0 0 1px rgba(196,125,255,0.5);
+    }
+
+    button.submit-code {
+      margin-top: 6px;
+      padding: 7px 10px;
+      border-radius: 999px;
+      border: none;
+      font-size: 13px;
+      background: linear-gradient(135deg, #c47dff, #7b9dff);
+      color: #050814;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    button.submit-code:disabled {
+      opacity: 0.5;
+      cursor: default;
+    }
+
+    .status {
+      font-size: 12px;
+      margin-top: 4px;
+    }
+
+    .status.ok {
+      color: #6dffb3;
+    }
+
+    .status.error {
+      color: #ff8080;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .chip {
+      padding: 4px 8px;
+      font-size: 11px;
+      border-radius: 999px;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(9,14,40,0.9);
+    }
+
+    .chip.done {
+      border-color: #65ffb2;
+      color: #65ffb2;
+    }
+
+    .success-banner {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #32e397, #7b9dff);
+      color: #050814;
+      font-size: 13px;
+      font-weight: 600;
+      display: none;
+    }
+
+    .success-banner.visible {
+      display: block;
+    }
+
+    a.tiktok-link {
+      font-size: 12px;
+      color: #ff7ad9;
+      text-decoration: none;
+    }
+
+    a.tiktok-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 900px) {
+      body {
+        flex-direction: column;
+      }
+      .map-container {
+        height: 55vh;
+      }
+      .sidebar {
+        height: 45vh;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="map-container">
+    <!-- IMPORTANT: file name must match your image -->
+    <img src="campus-map.png" alt="NYUAD Campus Map">
+
+    <!-- You will tweak these top/left % to match where A2, A3, etc. are on your image -->
+
+    <!-- C1 -->
+    <button class="map-pin" style="top:25%; left:25%;" data-id="C1">C1</button>
+
+    <!-- A2 -->
+    <button class="map-pin" style="top:70%; left:30%;" data-id="A2">A2</button>
+
+    <!-- A3 -->
+    <button class="map-pin" style="top:72%; left:42%;" data-id="A3">A3</button>
+
+    <!-- A5 -->
+    <button class="map-pin" style="top:70%; left:60%;" data-id="A5">A5</button>
+
+    <!-- A6 -->
+    <button class="map-pin" style="top:70%; left:72%;" data-id="A6">A6</button>
+
+    <!-- D2 -->
+    <button class="map-pin" style="top:78%; left:80%;" data-id="D2">D2</button>
+  </div>
+
+  <div class="sidebar">
+    <h1>Microbes of NYUAD</h1>
+    <p class="tagline">Click a building on the map to reveal its microbe, clue, and code box.</p>
+
+    <div class="panel" id="locationPanel">
+      <div class="label">Selected location</div>
+      <h2 id="locTitle">None selected</h2>
+      <p id="microbeInfo">Tap on A2, A3, A5, A6, C1 or D2 to begin the scavenger hunt.</p>
+      <p id="clue"></p>
+
+      <div id="codeArea" style="display:none;">
+        <label class="label" for="codeInput">Enter secret code from QR quiz</label>
+        <input type="text" id="codeInput" placeholder="Type code word here" autocomplete="off">
+        <button class="submit-code" id="submitCodeBtn">Submit code</button>
+        <div class="status" id="statusMsg"></div>
+
+        <!-- Optional TikTok hint link -->
+        <a class="tiktok-link" id="tiktokLink" href="#" target="_blank" style="display:none;">
+          Watch the TikTok hint 🎵
+        </a>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="label">Progress</div>
+      <div class="chip-row" id="progressChips"></div>
+    </div>
+
+    <div class="success-banner" id="successBanner">
+      ✅ You unlocked all microbes! The scavenger hunt is complete. 🌍🦠
+    </div>
+  </div>
+
+  <script>
+    // ====== CONFIGURATION FOR EACH BUILDING ======
+    const LOCATIONS = {
+      A6: {
+        name: "A6 – Arts & Humanities",
+        microbe: "Saccharomyces cerevisiae (yeast)",
+        text: "Yeast ferments sugars to create bread, beer, and bio-based materials. A symbol of creativity and transformation.",
+        clue: "Find the place where stories rise like bread – near the main A6 entrance noticeboard.",
+        code: "FERMENT",
+        tiktok: "" // paste TikTok link if you want
+      },
+      A5: {
+        name: "A5 – Social Science Building",
+        microbe: "Staphylococcus epidermidis",
+        text: "A friendly skin microbe that lives in communities on our bodies and helps defend against more harmful bacteria.",
+        clue: "Look where students gather to discuss society – near the A5 lobby seating area.",
+        code: "COMMUNITY",
+        tiktok: ""
+      },
+      C1: {
+        name: "C1 – Experimental Research Building",
+        microbe: "Pseudomonas aeruginosa (lab strain)",
+        text: "A versatile environmental bacterium used to study biofilms and antimicrobial resistance in research labs.",
+        clue: "Search near the main C1 elevator – where experiments travel up and down.",
+        code: "BIOFILM",
+        tiktok: ""
+      },
+      A2: {
+        name: "A2 – Computational Research Building",
+        microbe: "Bacteroides (gut data cruncher)",
+        text: "Bacteroides break down complex carbohydrates in the gut, like tiny data processors for our food.",
+        clue: "Go where servers and simulations hum – near the A2 entrance screen.",
+        code: "ALGORITHM",
+        tiktok: ""
+      },
+      A3: {
+        name: "A3 – West Administration",
+        microbe: "Streptococcus mitis",
+        text: "An oral microbiome resident connected to communication — living where speech starts.",
+        clue: "Find the doors that organize the campus – near the A3 reception area.",
+        code: "POLICY",
+        tiktok: ""
+      },
+      D2: {
+        name: "D2 – East Restaurant",
+        microbe: "Lactobacillus",
+        text: "Lactobacillus ferments foods like yogurt, pickles, and kimchi, supporting gut health and food preservation.",
+        clue: "Follow the smell of food – look near the D2 menu board or main entrance.",
+        code: "YOGHURT",
+        tiktok: ""
+      }
+    };
+
+    let currentId = null;
+    const solved = {};
+    const chipsContainer = document.getElementById("progressChips");
+
+    // Create progress chips for each building
+    Object.keys(LOCATIONS).forEach(id => {
+      solved[id] = false;
+      const chip = document.createElement("div");
+      chip.className = "chip";
+      chip.textContent = id;
+      chip.dataset.id = id;
+      chipsContainer.appendChild(chip);
+    });
+
+    const locTitle = document.getElementById("locTitle");
+    const microbeInfo = document.getElementById("microbeInfo");
+    const clueEl = document.getElementById("clue");
+    const codeArea = document.getElementById("codeArea");
+    const codeInput = document.getElementById("codeInput");
+    const submitBtn = document.getElementById("submitCodeBtn");
+    const statusMsg = document.getElementById("statusMsg");
+    const successBanner = document.getElementById("successBanner");
+    const tiktokLink = document.getElementById("tiktokLink");
+
+    function updateChips() {
+      document.querySelectorAll(".chip").forEach(chip => {
+        const id = chip.dataset.id;
+        if (solved[id]) {
+          chip.classList.add("done");
+        }
+      });
+    }
+
+    function checkAllSolved() {
+      const allDone = Object.values(solved).every(v => v);
+      if (allDone) {
+        successBanner.classList.add("visible");
+      }
+    }
+
+    // When user clicks a building on the map
+    document.querySelectorAll(".map-pin").forEach(pin => {
+      pin.addEventListener("click", () => {
+        const id = pin.dataset.id;
+        const data = LOCATIONS[id];
+        currentId = id;
+
+        locTitle.textContent = data.name;
+        microbeInfo.innerHTML = `<span class="microbe-name">${data.microbe}</span> – ${data.text}`;
+        clueEl.textContent = "Clue: " + data.clue;
+
+        codeArea.style.display = "block";
+        statusMsg.textContent = "";
+        statusMsg.className = "status";
+
+        if (solved[id]) {
+          codeInput.value = data.code;
+          codeInput.disabled = true;
+          submitBtn.disabled = true;
+          statusMsg.textContent = "Already solved ✓";
+          statusMsg.classList.add("ok");
+        } else {
+          codeInput.value = "";
+          codeInput.disabled = false;
+          submitBtn.disabled = false;
+        }
+
+        if (data.tiktok) {
+          tiktokLink.href = data.tiktok;
+          tiktokLink.style.display = "inline-block";
+        } else {
+          tiktokLink.style.display = "none";
+        }
+      });
+    });
+
+    // Handle code submission
+    submitBtn.addEventListener("click", () => {
+      if (!currentId) return;
+      const data = LOCATIONS[currentId];
+      const userCode = codeInput.value.trim().toUpperCase();
+      const correct = data.code.toUpperCase();
+
+      if (!userCode) return;
+
+      if (userCode === correct) {
+        solved[currentId] = true;
+        statusMsg.textContent = "Correct! Microbe unlocked ✓";
+        statusMsg.className = "status ok";
+        codeInput.disabled = true;
+        submitBtn.disabled = true;
+        updateChips();
+        checkAllSolved();
+      } else {
+        statusMsg.textContent = "Try again – check the QR / TikTok hint.";
+        statusMsg.className = "status error";
+      }
+    });
+  </script>
+</body>
+</html>
